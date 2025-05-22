@@ -1,0 +1,42 @@
+services:
+  postgres:
+    container_name: ${POSTGRES_CONTAINER_NAME}
+    image: postgres:17.4
+    restart: unless-stopped
+    environment:
+      DATABASE_HOST: 127.0.0.1
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "10003:${POSTGRES_PORT}"
+    volumes:
+       - ./Data/postgres/data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  userapi:
+    container_name: ${USER_API_CONTAINER_NAME}
+    restart: unless-stopped
+    ports:
+      - "10000:${USER_API_PORT_REST}"
+    environment:
+     - ASPNETCORE_URLS=http://+:${USER_API_PORT_REST}
+     - ConnectionStrings__Users=${USER_API_CONNECTION_STRING}
+     - ASPNETCORE_ENVIRONMENT=${USER_API_ENV}
+    build:
+       context: ..
+       dockerfile: ./UserAPI/Dockerfile
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    healthcheck:
+       test: ["CMD", "curl", "--fail", "http://localhost:${USER_API_PORT_REST}/healthcheck"]
+       interval: 10s
+       timeout: 5s
+       retries: 5

@@ -1,0 +1,15 @@
+# directories
+**/bin/
+**/obj/
+**/out/
+
+# IDE
+.vs/
+.idea/
+
+# files
+Dockerfile*
+
+# git
+.git/
+.gitignore
